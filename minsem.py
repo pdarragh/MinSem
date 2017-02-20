@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 class DataToken:
     def __init__(self, line: str):
+        parts = line.split('\t')
         (
             self.offset,
             self.word,
@@ -15,7 +16,8 @@ class DataToken:
             self.strength,
             self.supersense,
             self.sentence_id
-        ) = line.split('\t')
+        ) = list(map(lambda x: None if not x else x, parts))
+        self.parent_offset = None if self.parent_offset == '0' else int(self.parent_offset)
 
 
 class DataSentence:
