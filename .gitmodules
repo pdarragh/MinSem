@@ -1,3 +1,4 @@
 [submodule "dimsum-data"]
 	path = dimsum-data
 	url = https://github.com/dimsum16/dimsum-data.git
+	ignore = dirty
