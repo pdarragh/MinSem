@@ -19,3 +19,23 @@ the goal is to predict the following representation:
 > I googled`v.communication` restaurants`GROUP` in the area`n.location` and Fuji`_`Sushi`n.group`
 > came`_`up`v.communication` and reviews`n.communication` were`v.stative` great so I made`_` a carry`_`out`v.possession`
 > `_`order`v.communication`
+
+The second representation includes information about *multi-word expressions*, or MWEs, and *supersenses*. An MWE is a
+group of tokens which carry a strong semantic link to one another. A supersense 
+
+## Inputs
+
+`minsem.py` takes two positional arguments: the path to a file containing training data, and the path to a file
+containing testing data. The files must be tab-delimited and contain the following nine fields on each line:
+
+1. token offset within the sentences
+2. word literal
+3. lowercase form of word literal
+4. part-of-speech tag
+5. multi-word expression (MWE) tag
+6. offset from parent token within MWE (if applicable)
+7. strength level (if applicable)
+8. supersense label (if applicable)
+9. sentence identification string
+
+Fields may be left blank if unused. Blank lines will be skipped, but are not assumed to separate sentences.
