@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from collections import defaultdict, OrderedDict
+from typing import Iterable, Iterator
 
 
 class DataToken:
@@ -21,13 +22,13 @@ class DataSentence:
         self._tokens: OrderedDict = OrderedDict()
         self.sentence_id = None
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[DataToken]:
         return iter(self._tokens)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> DataToken:
         return self._tokens[item]
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self._tokens)
 
     def append(self, token: DataToken):
@@ -40,7 +41,7 @@ class DataSentence:
         self._tokens[int(token.offset)] = token
 
     @property
-    def sentence(self):
+    def sentence(self) -> str:
         return ' '.join(map(lambda t: t.word, self._tokens.values()))
 
 
