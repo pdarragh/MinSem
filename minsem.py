@@ -1,23 +1,19 @@
 #!/usr/bin/env python3
 
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 
 
 class DataToken:
-    def __init__(self, line: str):
-        parts = line.split('\t')
-        (
-            self.offset,
-            self.word,
-            self.lowercase_lemma,
-            self.pos_tag,
-            self.mwe_tag,
-            self.parent_offset,
-            self.strength,
-            self.supersense,
-            self.sentence_id
-        ) = list(map(lambda x: None if not x else x, parts))
-        self.parent_offset = None if self.parent_offset == '0' else int(self.parent_offset)
+    def __init__(self, offset, word, lowercase, pos_tag, mwe_tag, parent_offset, strength, supersense, sentence_id):
+        self.offset = offset
+        self.word = word
+        self.lowercase_lemma = lowercase
+        self.pos_tag = pos_tag
+        self.mwe_tag = mwe_tag
+        self.parent_offset = None if parent_offset == '0' else int(parent_offset)
+        self.strength = strength
+        self.supersense = supersense
+        self.sentence_id = sentence_id
 
 
 class DataSentence:
@@ -49,23 +45,12 @@ class DataSentence:
 
 
 def read_data_file(datafile: str):
-    data_sentences = {}
+    data_sentences = defaultdict(DataSentence)
     with open(datafile) as df:
-        sentence = DataSentence()
         for line in df:
-            line = line.strip(' \n')
-            if not line:
-                # An empty line indicates the end of a sentence.
-                if sentence:
-                    data_sentences[sentence.sentence_id] = sentence
-                sentence = DataSentence()
-            else:
-                # A new token to be accumulated!
-                token = DataToken(line)
-                sentence.append(token)
-        # Check if there is a valid sentence; this would happen if the file does not end in a newline.
-        if sentence:
-            data_sentences[sentence.sentence_id] = sentence
+            if not line.isspace():
+                token = DataToken(*line.strip(' \n').split('\t'))
+                data_sentences[token.sentence_id].append(token)
     return data_sentences
 
 
