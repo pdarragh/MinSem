@@ -17,10 +17,10 @@ class DataToken:
         self.sentence_id = sentence_id
 
     def __repr__(self):
-        return '\t'.join([
+        return '\t'.join(map(lambda w: str(w) if w is not None else '', [
             self.offset, self.word, self.lowercase_lemma, self.pos_tag, self.mwe_tag, self.parent_offset, self.strength,
             self.supersense, self.sentence_id
-        ])
+        ]))
 
     def __str__(self):
         return repr(self)
