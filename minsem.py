@@ -11,7 +11,7 @@ class DataToken:
         self.lowercase_lemma = lowercase
         self.pos_tag = pos_tag
         self.mwe_tag = mwe_tag
-        self.parent_offset = None if parent_offset == '0' else int(parent_offset)
+        self.parent_offset = int(parent_offset)
         self.strength = strength
         self.supersense = supersense
         self.sentence_id = sentence_id
