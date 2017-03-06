@@ -114,11 +114,15 @@ class HMM:
         for sentence in sentences:
             for token in sentence:
                 # Find most-likely MWE tag.
-                mwe_tag = self.mwe_emissions[token.lowercase_lemma].get_highest_probability_feature()
-                token.mwe_tag = mwe_tag
+                mwe_ep = self.mwe_emissions.get(token.lowercase_lemma)
+                if mwe_ep is not None:
+                    mwe_tag = mwe_ep.get_highest_probability_feature()
+                    token.mwe_tag = mwe_tag
                 # Find most-likely SS tag.
-                ss_tag = self.ss_emissions[token.lowercase_lemma].get_highest_probability_feature()
-                token.supersense = ss_tag
+                ss_ep = self.ss_emissions.get(token.lowercase_lemma)
+                if ss_ep is not None:
+                    ss_tag = ss_ep.get_highest_probability_feature()
+                    token.supersense = ss_tag
 
 
 MWE_FEATURES = {'O', 'o', 'B', 'b', 'I', 'i'}
