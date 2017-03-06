@@ -45,14 +45,16 @@ class DataSentence:
         return ' '.join(map(lambda t: t.word, self._tokens.values()))
 
 
-def read_data_file(datafile: str):
+def read_data_file(datafile: str) -> Iterable[DataSentence]:
     data_sentences = defaultdict(DataSentence)
     with open(datafile) as df:
         for line in df:
             if not line.isspace():
-                token = DataToken(*line.strip(' \n').split('\t'))
+                # Strip extraneous whitespace from the line, then split it on the tabs. There should be exactly enough
+                # fields to fill the DataToken.
+                token = DataToken(*(line.strip(' \n').split('\t')))
                 data_sentences[token.sentence_id].append(token)
-    return data_sentences
+    return data_sentences.values()
 
 
 if __name__ == '__main__':
