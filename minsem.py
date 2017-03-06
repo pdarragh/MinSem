@@ -74,7 +74,7 @@ class HMM:
 
     def get_features_for_token(self, token: DataToken) -> Iterable[str]:
         features = []
-        mwe_feature = f'{token.mwe_tag.upper()}_mwe'
+        mwe_feature = f'{token.mwe_tag}_mwe'
         features.append(mwe_feature)
         return features
 
@@ -94,8 +94,11 @@ class HMM:
 def generate_features(sentences: DataSentence):
     features = set()
     features.add('O_mwe')
+    features.add('o_mwe')
     features.add('B_mwe')
+    features.add('b_mwe')
     features.add('I_mwe')
+    features.add('i_mwe')
     return features
 
 
