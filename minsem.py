@@ -6,7 +6,7 @@ from typing import Iterable, Iterator
 
 class DataToken:
     def __init__(self, offset, word, lowercase, pos_tag, mwe_tag, parent_offset, strength, supersense, sentence_id):
-        self.offset = offset
+        self.offset = int(offset)
         self.word = word
         self.lowercase_lemma = lowercase
         self.pos_tag = pos_tag
@@ -22,8 +22,8 @@ class DataSentence:
         self._tokens: OrderedDict = OrderedDict()
         self.sentence_id = None
 
-    def __iter__(self) -> Iterator[DataToken]:
-        return iter(self._tokens)
+    def __iter__(self) -> Iterator[Iterable[DataToken]]:
+        return iter(self._tokens.values())
 
     def __getitem__(self, item) -> DataToken:
         return self._tokens[item]
@@ -43,6 +43,36 @@ class DataSentence:
     @property
     def sentence(self) -> str:
         return ' '.join(map(lambda t: t.word, self._tokens.values()))
+
+
+class FeatureSet:
+    def __init__(self):
+        self._feature_to_value = {}
+        self._value_to_feature = {}
+        self._counter = 0
+
+    def __len__(self):
+        return self._counter
+
+    def add_feature(self, feature: str):
+        if feature is not None and feature not in self._feature_to_value:
+            self._feature_to_value[feature] = self._counter
+            self._value_to_feature[self._counter] = feature
+            self._counter += 1
+
+    def lookup_feature(self, feature: str) -> int:
+        return self._feature_to_value[feature]
+
+    def lookup_value(self, value: int) -> str:
+        return self._value_to_feature[value]
+
+
+def generate_features(sentences: DataSentence):
+    features = FeatureSet()
+    for sentence in sentences:
+        for token in sentence:
+            features.add_feature(f'{token.mwe_tag.upper()}_mwe')
+    return features
 
 
 def read_data_file(datafile: str) -> Iterable[DataSentence]:
