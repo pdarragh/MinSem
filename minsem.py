@@ -68,38 +68,43 @@ class EmissionProbabilities:
 
 
 class HMM:
-    def __init__(self, features: Set[str]):
-        self.features = features
-        self.emissions = {}
-
-    def get_features_for_token(self, token: DataToken) -> Iterable[str]:
-        features = []
-        mwe_feature = f'{token.mwe_tag}_mwe'
-        features.append(mwe_feature)
-        return features
+    def __init__(self, mwe_features: Set[str], ss_features: Set[str]):
+        self.mwe_features = mwe_features
+        self.ss_features = ss_features
+        self.mwe_emissions = {}
+        self.ss_emissions = {}
 
     def train(self, sentences: Iterable[DataSentence]):
         for sentence in sentences:
             for token in sentence:
-                for feature in self.get_features_for_token(token):
-                    ep = self.emissions.get(token.lowercase_lemma)
-                    if ep is None:
-                        ep = EmissionProbabilities(self.features)
-                    ep.add_count(feature)
+                # Count emission probability for MWE.
+                mwe_feature = token.mwe_tag
+                mwe_ep = self.mwe_emissions.get(token.lowercase_lemma)
+                if mwe_ep is None:
+                    mwe_ep = EmissionProbabilities(self.mwe_features)
+                    self.mwe_emissions[token.lowercase_lemma] = mwe_ep
+                mwe_ep.add_count(mwe_feature)
+                # Count emission probability for SS.
+                ss_feature = token.supersense
+                ss_ep = self.ss_emissions.get(token.lowercase_lemma)
+                if ss_ep is None:
+                    ss_ep = EmissionProbabilities(self.ss_features)
+                    self.ss_emissions[token.lowercase_lemma] = ss_ep
+                ss_ep.add_count(ss_feature)
 
     def test(self, sentences: Iterable[DataSentence]):
-        ...
+        pass
 
 
-def generate_features(sentences: DataSentence):
-    features = set()
-    features.add('O_mwe')
-    features.add('o_mwe')
-    features.add('B_mwe')
-    features.add('b_mwe')
-    features.add('I_mwe')
-    features.add('i_mwe')
-    return features
+MWE_FEATURES = {'O', 'o', 'B', 'b', 'I', 'i'}
+
+
+def generate_ss_features(sentences: Iterable[DataSentence]) -> Set[str]:
+    ss_features = set()
+    for sentence in sentences:
+        for token in sentence:
+            ss_features.add(token.supersense)
+    return ss_features
 
 
 def read_data_file(datafile: str) -> Iterable[DataSentence]:
@@ -124,3 +129,14 @@ if __name__ == '__main__':
     # Read the data.
     training_sentences = read_data_file(args.training_data)
     testing_sentences = read_data_file(args.testing_data)
+
+    # Generate Features
+    user_mwe_features = MWE_FEATURES
+    user_ss_features = generate_ss_features(training_sentences)
+
+    # Build model.
+    hmm = HMM(user_mwe_features, user_ss_features)
+    hmm.train(training_sentences)
+
+    # Test model.
+    hmm.test(testing_sentences)
