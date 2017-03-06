@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from collections import defaultdict, OrderedDict
-from typing import Iterable, Set
+from typing import Dict, Iterable, Set
 
 
 class DataToken:
@@ -15,6 +15,15 @@ class DataToken:
         self.strength = strength
         self.supersense = supersense
         self.sentence_id = sentence_id
+
+    def __repr__(self):
+        return '\t'.join([
+            self.offset, self.word, self.lowercase_lemma, self.pos_tag, self.mwe_tag, self.parent_offset, self.strength,
+            self.supersense, self.sentence_id
+        ])
+
+    def __str__(self):
+        return repr(self)
 
 
 class DataSentence:
@@ -60,6 +69,15 @@ class EmissionProbabilities:
     def get_probability(self, feature: str):
         return self.counts[feature] / self.total_count
 
+    def get_highest_probability_feature(self) -> str:
+        highest = 0
+        best_feature = None
+        for feature, count in self.counts.items():
+            if count > highest:
+                highest = count
+                best_feature = feature
+        return best_feature
+
     def __str__(self):
         lines = []
         for feature in self.counts:
@@ -71,8 +89,8 @@ class HMM:
     def __init__(self, mwe_features: Set[str], ss_features: Set[str]):
         self.mwe_features = mwe_features
         self.ss_features = ss_features
-        self.mwe_emissions = {}
-        self.ss_emissions = {}
+        self.mwe_emissions: Dict[str, EmissionProbabilities] = {}
+        self.ss_emissions: Dict[str, EmissionProbabilities] = {}
 
     def train(self, sentences: Iterable[DataSentence]):
         for sentence in sentences:
@@ -93,7 +111,14 @@ class HMM:
                 ss_ep.add_count(ss_feature)
 
     def test(self, sentences: Iterable[DataSentence]):
-        pass
+        for sentence in sentences:
+            for token in sentence:
+                # Find most-likely MWE tag.
+                mwe_tag = self.mwe_emissions[token.lowercase_lemma].get_highest_probability_feature()
+                token.mwe_tag = mwe_tag
+                # Find most-likely SS tag.
+                ss_tag = self.ss_emissions[token.lowercase_lemma].get_highest_probability_feature()
+                token.supersense = ss_tag
 
 
 MWE_FEATURES = {'O', 'o', 'B', 'b', 'I', 'i'}
@@ -119,11 +144,21 @@ def read_data_file(datafile: str) -> Iterable[DataSentence]:
     return data_sentences.values()
 
 
+def write_predictions(sentences: Iterable[DataSentence], outfile: str):
+    with open(outfile, 'w') as of:
+        for sentence in sentences:
+            for token in sentence:
+                of.write(repr(token))
+                of.write('\n')
+            of.write('\n')
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('training-data', help='the datafile to train with')
-    parser.add_argument('testing-data', help='the datafile to test with')
+    parser.add_argument('training_data', help='the datafile to train with')
+    parser.add_argument('testing_data', help='the datafile to test with')
+    parser.add_argument('predictions_output', default='minsem.pred', help='the output file for test data predictions')
     args = parser.parse_args()
 
     # Read the data.
@@ -140,3 +175,6 @@ if __name__ == '__main__':
 
     # Test model.
     hmm.test(testing_sentences)
+
+    # Output predictions.
+    write_predictions(testing_sentences, args.predictions_output)
