@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from collections import defaultdict, OrderedDict
-from typing import Iterable, Iterator
+from typing import Iterable, Set
 
 
 class DataToken:
@@ -22,7 +22,7 @@ class DataSentence:
         self._tokens: OrderedDict = OrderedDict()
         self.sentence_id = None
 
-    def __iter__(self) -> Iterator[Iterable[DataToken]]:
+    def __iter__(self) -> Iterable[DataToken]:
         return iter(self._tokens.values())
 
     def __getitem__(self, item) -> DataToken:
@@ -45,33 +45,57 @@ class DataSentence:
         return ' '.join(map(lambda t: t.word, self._tokens.values()))
 
 
-class FeatureSet:
-    def __init__(self):
-        self._feature_to_value = {}
-        self._value_to_feature = {}
-        self._counter = 0
+class EmissionProbabilities:
+    def __init__(self, features: Set[str]):
+        self.counts = {feature: 0 for feature in features}
+        self.total_count = 0
 
-    def __len__(self):
-        return self._counter
+    def __getitem__(self, feature: str):
+        return self.get_probability(feature)
 
-    def add_feature(self, feature: str):
-        if feature is not None and feature not in self._feature_to_value:
-            self._feature_to_value[feature] = self._counter
-            self._value_to_feature[self._counter] = feature
-            self._counter += 1
+    def add_count(self, feature: str, count=1):
+        self.counts[feature] += count
+        self.total_count += 1
 
-    def lookup_feature(self, feature: str) -> int:
-        return self._feature_to_value[feature]
+    def get_probability(self, feature: str):
+        return self.counts[feature] / self.total_count
 
-    def lookup_value(self, value: int) -> str:
-        return self._value_to_feature[value]
+    def __str__(self):
+        lines = []
+        for feature in self.counts:
+            lines.append(f'{round(self.get_probability(feature), 4):>8} : {feature}')
+        return '\n'.join(lines)
+
+
+class HMM:
+    def __init__(self, features: Set[str]):
+        self.features = features
+        self.emissions = {}
+
+    def get_features_for_token(self, token: DataToken) -> Iterable[str]:
+        features = []
+        mwe_feature = f'{token.mwe_tag.upper()}_mwe'
+        features.append(mwe_feature)
+        return features
+
+    def train(self, sentences: Iterable[DataSentence]):
+        for sentence in sentences:
+            for token in sentence:
+                for feature in self.get_features_for_token(token):
+                    ep = self.emissions.get(token.lowercase_lemma)
+                    if ep is None:
+                        ep = EmissionProbabilities(self.features)
+                    ep.add_count(feature)
+
+    def test(self, sentences: Iterable[DataSentence]):
+        ...
 
 
 def generate_features(sentences: DataSentence):
-    features = FeatureSet()
-    for sentence in sentences:
-        for token in sentence:
-            features.add_feature(f'{token.mwe_tag.upper()}_mwe')
+    features = set()
+    features.add('O_mwe')
+    features.add('B_mwe')
+    features.add('I_mwe')
     return features
 
 
