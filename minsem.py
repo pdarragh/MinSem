@@ -162,7 +162,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('training_data', help='the datafile to train with')
     parser.add_argument('testing_data', help='the datafile to test with')
-    parser.add_argument('predictions_output', default='minsem.pred', help='the output file for test data predictions')
+    parser.add_argument('predictions_output', default='minsem.pred', nargs='?',
+                        help='the output file for test data predictions')
     args = parser.parse_args()
 
     # Read the data.
