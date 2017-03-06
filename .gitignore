@@ -93,3 +93,6 @@ ENV/
 
 # MacOS
 .DS_Store
+
+# Miscellaneous
+*.pred
