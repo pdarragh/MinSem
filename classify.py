@@ -275,8 +275,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('training_data', help='the datafile to train with')
     parser.add_argument('testing_data', help='the datafile to test with')
-    parser.add_argument('predictions_output', default='minsem.pred', nargs='?',
-                        help='the output file for test data predictions')
+    parser.add_argument('training_output', help='the output file for training data classification')
+    parser.add_argument('testing_output', help='the output file for testing data classification')
     args = parser.parse_args()
 
     # Read the data.
@@ -288,5 +288,7 @@ if __name__ == '__main__':
     classifier = Classifier(distinct_words, distinct_poses)
 
     classifier.train(training_sentences)
-
     classifier.test(testing_sentences)
+
+    classifier.write_training_vectors_to_file(args.training_output)
+    classifier.write_testing_vectors_to_file(args.testing_output)
