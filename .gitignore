@@ -98,3 +98,4 @@ ENV/
 *.pred
 papers/*
 testing/*
+class/*
