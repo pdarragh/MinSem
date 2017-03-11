@@ -128,7 +128,7 @@ class FeatureVector:
     def __str__(self):
         result = '{}'.format(self.label.value)
         for feature in sorted(self._features):
-            result += ' {}:1'.format(feature)
+            result += ' {}'.format(feature)
         return result
 
 
