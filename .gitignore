@@ -97,4 +97,4 @@ ENV/
 # Miscellaneous
 *.pred
 papers/*
-tests/*
+testing/*
