@@ -16,7 +16,7 @@ class Label(Enum):
     I = 2
 
 
-class Frequency:
+class FrequencyCounter:
     def __init__(self):
         self._frequencies: Dict[Label, int] = {label: 0 for label in Label}
 
@@ -41,7 +41,7 @@ class Prediction:
 
 class MWE:
     def __init__(self):
-        self.frequencies: Dict[FeatureID, Frequency] = {}
+        self.frequencies: Dict[FeatureID, FrequencyCounter] = {}
 
     def train(self, training_datafile: str):
         with open(training_datafile) as df:
@@ -50,7 +50,7 @@ class MWE:
                 for feature in features:
                     frequency = self.frequencies.get(feature)
                     if frequency is None:
-                        frequency = Frequency()
+                        frequency = FrequencyCounter()
                         self.frequencies[feature] = frequency
                     frequency[label] += 1
 
