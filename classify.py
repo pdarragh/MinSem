@@ -234,6 +234,11 @@ class Classifier:
     def write_testing_vectors_to_file(self, filename: str):
         self._write_vectors_to_file(self.testing_vectors, filename)
 
+    def write_features_to_file(self, filename: str):
+        with open(filename, 'w') as f:
+            for key, value in self.feature_set.items():
+                f.write(f'{value:<{len(str(len(self.feature_set)))}} : {key}\n')
+
 
 def read_data_file(datafile: str) -> Iterable[DataSentence]:
     data_sentences = []
@@ -273,6 +278,7 @@ if __name__ == '__main__':
     parser.add_argument('testing_data', help='the datafile to test with')
     parser.add_argument('training_output', help='the output file for training data classification')
     parser.add_argument('testing_output', help='the output file for testing data classification')
+    parser.add_argument('--feature_output', help='the output file for the entire feature set')
     args = parser.parse_args()
 
     # Read the data.
@@ -288,3 +294,6 @@ if __name__ == '__main__':
 
     classifier.write_training_vectors_to_file(args.training_output)
     classifier.write_testing_vectors_to_file(args.testing_output)
+
+    if args.feature_output:
+        classifier.write_features_to_file(args.feature_output)
