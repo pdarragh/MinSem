@@ -27,6 +27,13 @@ class Frequency:
         self._frequencies[key] = value
 
 
+class Prediction:
+    def __init__(self, line_number: int, predicted_label: Label, actual_label: Label):
+        self.line_number = line_number
+        self.predicted_label = predicted_label
+        self.actual_label = actual_label
+
+
 class MWE:
     def __init__(self):
         self.frequencies: Dict[FeatureID, Frequency] = {}
