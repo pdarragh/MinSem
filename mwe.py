@@ -5,7 +5,7 @@ A machine learning classifier for identifying minimal semantic units. See the RE
 """
 
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import Dict, List, Mapping, Tuple
 
 FeatureID = int
 
@@ -16,9 +16,12 @@ class Label(Enum):
     I = 2
 
 
-class FrequencyCounter:
+class FrequencyCounter(Mapping):
     def __init__(self):
         self._frequencies: Dict[Label, int] = {label: 0 for label in Label}
+
+    def __iter__(self):
+        return iter(self._frequencies)
 
     def __getitem__(self, label: Label) -> int:
         return self._frequencies[label]
