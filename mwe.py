@@ -5,7 +5,7 @@ A machine learning classifier for identifying minimal semantic units. See the RE
 """
 
 from enum import Enum
-from typing import Dict, List, Mapping, Tuple
+from typing import Dict, List, Mapping, Tuple, Union
 
 FeatureID = int
 
@@ -94,6 +94,32 @@ class Evaluation:
             return self.correct[label] / self.predicted[label]
         except ZeroDivisionError:
             return 0
+
+
+class ConfusionMatrix(Mapping):
+    def __init__(self):
+        # The matrix maps ACTUAL labels to dicts mapping PREDICTED labels to their counts.
+        # (i.e. `l1` is the ACTUAL label and `l2` is the PREDICTED label.)
+        self.matrix = {l1: {l2: 0 for l2 in Label} for l1 in Label}
+
+    def __iter__(self):
+        return iter(self.matrix)
+
+    def __len__(self):
+        return len(self.matrix)
+
+    def __getitem__(self, item: Union[Label, Tuple[Label, Label]]):
+        if isinstance(item, Label):
+            return self.matrix[item]
+        elif isinstance(item, Tuple[Label, Label]):
+            actual, predicted = item
+            return self.matrix[actual][predicted]
+        else:
+            raise KeyError(str(item))
+
+    def __setitem__(self, key: Tuple[Label, Label], value: int):
+        actual, predicted = key
+        self.matrix[actual][predicted] = value
 
 
 class MWE:
