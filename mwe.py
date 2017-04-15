@@ -23,6 +23,9 @@ class FrequencyCounter(Mapping):
     def __iter__(self):
         return iter(self._frequencies)
 
+    def __len__(self) -> int:
+        return len(self._frequencies)
+
     def __getitem__(self, label: Label) -> int:
         return self._frequencies[label]
 
