@@ -16,7 +16,10 @@ class Label(Enum):
     I = 2
 
 
-class ZeroedLabelDict:
+LabelDict = Dict[Label, int]
+
+
+class ZeroedLabelDict(LabelDict):
     def __new__(cls):
         return {label: 0 for label in Label}
 
@@ -47,6 +50,19 @@ class Prediction:
         self.predicted_label = predicted_label
         self.actual_label = actual_label
         self.features = features
+
+
+class Evaluation:
+    def __init__(self):
+        self.correct = ZeroedLabelDict()
+        self.predicted = ZeroedLabelDict()
+        self.actual = ZeroedLabelDict()
+
+    def recall(self, label: Label):
+        return self.correct[label] / self.actual[label]
+
+    def precision(self, label: Label):
+        return self.correct[label] / self.predicted[label]
 
 
 class MWE:
@@ -80,16 +96,14 @@ class MWE:
                 prediction = Prediction(likely_label, actual_label, features)
                 self.predictions.append(prediction)
 
-    def evaluate(self):
-        correct = ZeroedLabelDict()
-        predicted = ZeroedLabelDict()
-        actual = ZeroedLabelDict()
+    def evaluate(self) -> Evaluation:
+        evaluation = Evaluation()
         for prediction in self.predictions:
-            predicted[prediction.predicted_label] += 1
-            actual[prediction.actual_label] += 1
+            evaluation.predicted[prediction.predicted_label] += 1
+            evaluation.actual[prediction.actual_label] += 1
             if prediction.predicted_label == prediction.actual_label:
-                correct[prediction.predicted_label] += 1
-        return correct, predicted, actual
+                evaluation.correct[prediction.predicted_label] += 1
+        return evaluation
 
     @staticmethod
     def _read_line(line: str) -> Tuple[Label, List[FeatureID]]:
@@ -115,3 +129,6 @@ if __name__ == '__main__':
 
     # Now test it!
     mwe.test(args.testing_datafile)
+
+    # And evaluation here.
+    result = mwe.evaluate()
