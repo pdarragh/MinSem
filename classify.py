@@ -125,7 +125,7 @@ class FeatureVector:
         self._features.add(feature)
 
     def __str__(self):
-        return f'{self.label.value} {" ".join((feature for feature in sorted(self._features)))}'
+        return f'{self.label.value} {" ".join((str(feature) for feature in sorted(self._features)))}'
 
 
 class Classifier:
