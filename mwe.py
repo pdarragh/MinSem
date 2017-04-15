@@ -80,6 +80,17 @@ class MWE:
                 prediction = Prediction(likely_label, actual_label, features)
                 self.predictions.append(prediction)
 
+    def evaluate(self):
+        correct = ZeroedLabelDict()
+        predicted = ZeroedLabelDict()
+        actual = ZeroedLabelDict()
+        for prediction in self.predictions:
+            predicted[prediction.predicted_label] += 1
+            actual[prediction.actual_label] += 1
+            if prediction.predicted_label == prediction.actual_label:
+                correct[prediction.predicted_label] += 1
+        return correct, predicted, actual
+
     @staticmethod
     def _read_line(line: str) -> Tuple[Label, List[FeatureID]]:
         # Lines are assumed to be written in the form:
