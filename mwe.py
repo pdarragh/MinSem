@@ -95,6 +95,7 @@ class MWE:
     def __init__(self):
         self.frequencies: Dict[FeatureID, FrequencyCounter] = {}
         self.predictions: List[Prediction] = []
+        self.total_frequencies = FrequencyCounter()
 
     def train(self, training_datafile: str):
         with open(training_datafile) as df:
@@ -106,6 +107,7 @@ class MWE:
                         frequency = FrequencyCounter()
                         self.frequencies[feature] = frequency
                     frequency[label] += 1
+                    self.total_frequencies[label] += 1
 
     def test(self, testing_datafile: str):
         with open(testing_datafile) as df:
@@ -114,7 +116,11 @@ class MWE:
                 feature_count = len(features)
                 probabilities = ZeroedLabelDict()
                 for feature in features:
-                    counter = self.frequencies[feature]
+                    counter = self.frequencies.get(feature)
+                    if counter is None:
+                        # This feature is unique to the test data -- it is not found in the training data at all.
+                        # So just use the total values as inspiration.
+                        counter = self.total_frequencies
                     for label in counter:
                         prob_of_label_for_feature = counter[label] / counter.total_occurrences
                         probabilities[label] += prob_of_label_for_feature / feature_count
