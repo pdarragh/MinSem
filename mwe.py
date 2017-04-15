@@ -38,8 +38,7 @@ class FrequencyCounter(Mapping):
 
 
 class Prediction:
-    def __init__(self, line_number: int, predicted_label: Label, actual_label: Label, features: List[FeatureID]):
-        self.line_number = line_number
+    def __init__(self, predicted_label: Label, actual_label: Label, features: List[FeatureID]):
         self.predicted_label = predicted_label
         self.actual_label = actual_label
         self.features = features
