@@ -17,7 +17,7 @@ def label_from_string(s: str) -> Label:
         if s.upper().replace('-', '_') == label.name:
             return label
     else:
-        raise ValueError("invalid label: {}".format(s))
+        raise ValueError(f"invalid label: {s}")
 
 
 class DataToken:
@@ -83,8 +83,7 @@ class DataSentence(Sequence):
             self.sentence_id = token.sentence_id
         else:
             if token.sentence_id != self.sentence_id:
-                raise ValueError("sentence IDs do not match: {} (sentence) != {} (token)".format(self.sentence_id,
-                                                                                                 token.sentence_id))
+                raise ValueError(f"sentence IDs do not match: {self.sentence_id} (sent) != {token.sentence_id} (token)")
         self._tokens.append(token)
 
     @property
@@ -104,7 +103,7 @@ class FeatureSet(Mapping):
 
     def __getitem__(self, feature):
         if feature not in self._features:
-            raise KeyError("no such feature in feature set: {}".format(feature))
+            raise KeyError(f"no such feature in feature set: {feature}")
         return self._features[feature]
 
     def add(self, feature):
@@ -126,10 +125,7 @@ class FeatureVector:
         self._features.add(feature)
 
     def __str__(self):
-        result = '{}'.format(self.label.value)
-        for feature in sorted(self._features):
-            result += ' {}'.format(feature)
-        return result
+        return f'{self.label.value} {" ".join((feature for feature in sorted(self._features)))}'
 
 
 class Classifier:
@@ -144,23 +140,23 @@ class Classifier:
 
     @staticmethod
     def _current_word_feature(word):
-        return 'curr-word-{}'.format(word)
+        return f'curr-word-{word}'
 
     @staticmethod
     def _previous_word_feature(word):
-        return 'prev-word-{}'.format(word)
+        return f'prev-word-{word}'
 
     @staticmethod
     def _next_word_feature(word):
-        return 'next-word-{}'.format(word)
+        return f'next-word-{word}'
 
     @staticmethod
     def _previous_pos_feature(pos):
-        return 'prev-pos-{}'.format(pos)
+        return f'prev-pos-{pos}'
 
     @staticmethod
     def _next_pos_feature(pos):
-        return 'next-pos-{}'.format(pos)
+        return f'next-pos-{pos}'
 
     def _generate_features(self, words: Iterable[str], poses: Iterable[str]):
         pseudos = [PHI, OMEGA, UNKNOWN]
@@ -230,7 +226,7 @@ class Classifier:
     def _write_vectors_to_file(vectors: Iterable[FeatureVector], filename: str):
         with open(filename, 'w') as f:
             for vector in vectors:
-                f.write('{}\n'.format(vector))
+                f.write(f'{vector}\n')
 
     def write_training_vectors_to_file(self, filename: str):
         self._write_vectors_to_file(self.training_vectors, filename)
