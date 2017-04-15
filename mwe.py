@@ -9,6 +9,7 @@ from typing import Dict
 
 FeatureID = int
 
+
 class Label(Enum):
     O = 0
     B = 1
