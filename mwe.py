@@ -5,7 +5,7 @@ A machine learning classifier for identifying minimal semantic units. See the RE
 """
 
 from enum import Enum
-from typing import Dict
+from typing import Dict, List, Tuple
 
 FeatureID = int
 
@@ -33,12 +33,8 @@ class MWE:
 
     def train(self, training_datafile: str):
         with open(training_datafile) as df:
-            # Lines are assumed to be written in the form:
-            #   <label> <feature_1> <feature_2> ...
             for line in df:
-                parts = [int(part) for part in line.strip().split()]
-                label = Label(parts[0])
-                features = parts[1:]
+                label, features = self._read_line(line)
                 for feature in features:
                     frequency = self.frequencies.get(feature)
                     if frequency is None:
@@ -48,6 +44,15 @@ class MWE:
 
     def test(self, testing_datafile: str):
         pass
+
+    @staticmethod
+    def _read_line(line: str) -> Tuple[Label, List[FeatureID]]:
+        # Lines are assumed to be written in the form:
+        #   <label> <feature_1> <feature_2> ...
+        parts = [int(part) for part in line.strip().split()]
+        label = Label(parts[0])
+        features = parts[1:]
+        return label, features
 
 
 if __name__ == '__main__':
