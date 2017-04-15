@@ -28,10 +28,11 @@ class Frequency:
 
 
 class Prediction:
-    def __init__(self, line_number: int, predicted_label: Label, actual_label: Label):
+    def __init__(self, line_number: int, predicted_label: Label, actual_label: Label, features: List[FeatureID]):
         self.line_number = line_number
         self.predicted_label = predicted_label
         self.actual_label = actual_label
+        self.features = features
 
 
 class MWE:
