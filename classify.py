@@ -58,7 +58,7 @@ UNKNOWN = make_unknown()
 
 class DataSentence(Sequence):
     def __init__(self):
-        self._tokens: List = list()
+        self._tokens: List[DataToken] = list()
         self.sentence_id = None
 
     def __iter__(self) -> Iterable[DataToken]:
