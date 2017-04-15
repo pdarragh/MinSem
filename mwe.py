@@ -62,19 +62,24 @@ class Evaluation:
         default_len = 10
         longest_label: Label = max(self.correct.keys(), key=lambda l: len(l.name))
         label_len = max(len(longest_label.name), len('label'))
-        recall_len = max(default_len, len('recall'))
-        precision_len = max(default_len, len('precision'))
-        lines = [f'{"Label":<{label_len}}  {"Recall":<{recall_len}}  {"Precision":<{precision_len}}']
+        leader = (
+            f'{"Label":<{label_len}}'
+            '  '
+            f'{"Recall":<{default_len}}'
+            '  '
+            f'{"Precision":<{default_len}}'
+        )
+        lines = [leader]
         for label in self.correct:
-            recall = round(self.recall(label), recall_len - 2)
-            precision = round(self.precision(label), precision_len - 2)
+            recall = round(self.recall(label), default_len - 2)
+            precision = round(self.precision(label), default_len - 2)
             lines.append(
                 ' '
                 f'{label.name:<{label_len}}'
                 '  '
-                f'{recall:<{recall_len}}'
+                f'{recall:<{default_len}}'
                 '  '
-                f'{precision:<{precision_len}}'
+                f'{precision:<{default_len}}'
             )
         return '\n'.join(lines)
 
