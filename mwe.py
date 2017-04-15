@@ -58,11 +58,37 @@ class Evaluation:
         self.predicted = ZeroedLabelDict()
         self.actual = ZeroedLabelDict()
 
+    def __str__(self):
+        default_len = 10
+        longest_label: Label = max(self.correct.keys(), key=lambda l: len(l.name))
+        label_len = max(len(longest_label.name), len('label'))
+        recall_len = max(default_len, len('recall'))
+        precision_len = max(default_len, len('precision'))
+        lines = [f'{"Label":<{label_len}}  {"Recall":<{recall_len}}  {"Precision":<{precision_len}}']
+        for label in self.correct:
+            recall = round(self.recall(label), recall_len - 2)
+            precision = round(self.precision(label), precision_len - 2)
+            lines.append(
+                ' '
+                f'{label.name:<{label_len}}'
+                '  '
+                f'{recall:<{recall_len}}'
+                '  '
+                f'{precision:<{precision_len}}'
+            )
+        return '\n'.join(lines)
+
     def recall(self, label: Label):
-        return self.correct[label] / self.actual[label]
+        try:
+            return self.correct[label] / self.actual[label]
+        except ZeroDivisionError:
+            return 0
 
     def precision(self, label: Label):
-        return self.correct[label] / self.predicted[label]
+        try:
+            return self.correct[label] / self.predicted[label]
+        except ZeroDivisionError:
+            return 0
 
 
 class MWE:
@@ -132,3 +158,6 @@ if __name__ == '__main__':
 
     # And evaluation here.
     result = mwe.evaluate()
+
+    # Print results.
+    print(result)
