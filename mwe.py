@@ -20,11 +20,15 @@ class Frequency:
     def __init__(self):
         self._frequencies: Dict[Label, int] = {label: 0 for label in Label}
 
-    def __getitem__(self, label: Label):
+    def __getitem__(self, label: Label) -> int:
         return self._frequencies[label]
 
     def __setitem__(self, key: Label, value: int):
         self._frequencies[key] = value
+
+    @property
+    def total_occurrences(self) -> int:
+        return sum(self._frequencies.values())
 
 
 class Prediction:
