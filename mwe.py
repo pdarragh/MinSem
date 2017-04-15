@@ -16,9 +16,14 @@ class Label(Enum):
     I = 2
 
 
+class ZeroedLabelDict:
+    def __new__(cls):
+        return {label: 0 for label in Label}
+
+
 class FrequencyCounter(Mapping):
     def __init__(self):
-        self._frequencies: Dict[Label, int] = {label: 0 for label in Label}
+        self._frequencies: Dict[Label, int] = ZeroedLabelDict()
 
     def __iter__(self):
         return iter(self._frequencies)
@@ -65,7 +70,7 @@ class MWE:
             for line in df:
                 actual_label, features = self._read_line(line)
                 feature_count = len(features)
-                probabilities = {label: 0 for label in Label}
+                probabilities = ZeroedLabelDict()
                 for feature in features:
                     counter = self.frequencies[feature]
                     for label in counter:
