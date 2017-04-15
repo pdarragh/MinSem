@@ -47,6 +47,7 @@ class Prediction:
 class MWE:
     def __init__(self):
         self.frequencies: Dict[FeatureID, FrequencyCounter] = {}
+        self.predictions: List[Prediction] = []
 
     def train(self, training_datafile: str):
         with open(training_datafile) as df:
@@ -60,7 +61,19 @@ class MWE:
                     frequency[label] += 1
 
     def test(self, testing_datafile: str):
-        pass
+        with open(testing_datafile) as df:
+            for line in df:
+                actual_label, features = self._read_line(line)
+                feature_count = len(features)
+                probabilities = {label: 0 for label in Label}
+                for feature in features:
+                    counter = self.frequencies[feature]
+                    for label in counter:
+                        prob_of_label_for_feature = counter[label] / counter.total_occurrences
+                        probabilities[label] += prob_of_label_for_feature / feature_count
+                likely_label: Label = max(probabilities, key=probabilities.get)
+                prediction = Prediction(likely_label, actual_label, features)
+                self.predictions.append(prediction)
 
     @staticmethod
     def _read_line(line: str) -> Tuple[Label, List[FeatureID]]:
