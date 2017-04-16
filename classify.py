@@ -64,13 +64,14 @@ class DataSentence(Sequence):
     def __iter__(self) -> Iterable[DataToken]:
         return iter(self._tokens)
 
-    def __getitem__(self, item) -> DataToken:
-        if item < 0:
+    def __getitem__(self, item: int) -> DataToken:
+        # The indices are adjusted to match token offsets (i.e. the "first" element in the list has index 1).
+        if item < 1:
             return make_phi(self.sentence_id)
-        elif item >= len(self._tokens):
+        elif item > len(self._tokens):
             return make_omega(self.sentence_id)
         else:
-            return self._tokens[item]
+            return self._tokens[item - 1]  # Adjust the offset to match the true index.
 
     def __bool__(self) -> bool:
         return bool(self._tokens)
@@ -176,13 +177,12 @@ class Classifier:
 
     def train(self, sentences: Iterable[DataSentence]):
         for sentence in sentences:
-            for index in range(len(sentence)):
-                curr_word = sentence[index]
+            for curr_word in sentence:
                 vector = FeatureVector(curr_word.mwe_tag)
                 curr_word_feature = self._current_word_feature(curr_word.lowercase_lemma)
                 vector.add(self.feature_set[curr_word_feature])
-                prev_word = sentence[index - 1]
-                next_word = sentence[index + 1]
+                prev_word = sentence[curr_word.offset - 1]
+                next_word = sentence[curr_word.offset + 1]
                 prev_word_feature = self._previous_word_feature(prev_word.lowercase_lemma)
                 next_word_feature = self._next_word_feature(next_word.lowercase_lemma)
                 prev_pos_feature = self._previous_pos_feature(prev_word.pos_tag)
@@ -196,14 +196,13 @@ class Classifier:
     def test(self, sentences: Iterable[DataSentence]):
         def_curr_word_label = self.feature_set[self._current_word_feature(UNKNOWN.lowercase_lemma)]
         for sentence in sentences:
-            for index in range(len(sentence)):
-                curr_word = sentence[index]
+            for curr_word in sentence:
                 vector = FeatureVector(curr_word.mwe_tag)
                 curr_word_feature = self._current_word_feature(curr_word.lowercase_lemma)
                 curr_word_feature_label = self.feature_set.get(curr_word_feature, default=def_curr_word_label)
                 vector.add(curr_word_feature_label)
-                prev_word = sentence[index - 1]
-                next_word = sentence[index + 1]
+                prev_word = sentence[curr_word.offset - 1]
+                next_word = sentence[curr_word.offset + 1]
                 def_prev_word_label = self.feature_set[self._previous_word_feature(UNKNOWN.lowercase_lemma)]
                 def_next_word_label = self.feature_set[self._next_word_feature(UNKNOWN.lowercase_lemma)]
                 def_prev_pos_label = self.feature_set[self._previous_pos_feature(UNKNOWN.pos_tag)]
