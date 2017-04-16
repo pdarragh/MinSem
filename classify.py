@@ -150,6 +150,10 @@ class Classifier:
         return f'next-word-{word}'
 
     @staticmethod
+    def _current_pos_feature(pos):
+        return f'curr-pos-{pos}'
+
+    @staticmethod
     def _previous_pos_feature(pos):
         return f'prev-pos-{pos}'
 
@@ -170,6 +174,7 @@ class Classifier:
         self.feature_set.add(self._next_word_feature(word))
 
     def _generate_features_for_pos(self, pos: str):
+        self.feature_set.add(self._current_pos_feature(pos))
         self.feature_set.add(self._previous_pos_feature(pos))
         self.feature_set.add(self._next_pos_feature(pos))
 
@@ -178,9 +183,9 @@ class Classifier:
             for curr_word in sentence:
                 # Create a feature vector for each word in the training set.
                 vector = FeatureVector(curr_word.mwe_tag)
-                # Create and add a feature for the current word.
+                # Create features for the current word and POS.
                 curr_word_feature = self._current_word_feature(curr_word.lowercase_lemma)
-                vector.add(self.feature_set[curr_word_feature])
+                curr_pos_feature = self._current_pos_feature(curr_word.pos_tag)
                 # Create features for the previous word, next word, previous POS, and next POS.
                 prev_word = sentence[curr_word.offset - 1]
                 next_word = sentence[curr_word.offset + 1]
@@ -189,6 +194,8 @@ class Classifier:
                 prev_pos_feature = self._previous_pos_feature(prev_word.pos_tag)
                 next_pos_feature = self._next_pos_feature(next_word.pos_tag)
                 # Add those features to the vector.
+                vector.add(self.feature_set[curr_word_feature])
+                vector.add(self.feature_set[curr_pos_feature])
                 vector.add(self.feature_set[prev_word_feature])
                 vector.add(self.feature_set[next_word_feature])
                 vector.add(self.feature_set[prev_pos_feature])
@@ -201,16 +208,18 @@ class Classifier:
         default_curr_word_label = self.feature_set[self._current_word_feature(UNKNOWN.lowercase_lemma)]
         default_prev_word_label = self.feature_set[self._previous_word_feature(UNKNOWN.lowercase_lemma)]
         default_next_word_label = self.feature_set[self._next_word_feature(UNKNOWN.lowercase_lemma)]
+        default_curr_pos_label = self.feature_set[self._current_pos_feature(UNKNOWN.pos_tag)]
         default_prev_pos_label = self.feature_set[self._previous_pos_feature(UNKNOWN.pos_tag)]
         default_next_pos_label = self.feature_set[self._next_pos_feature(UNKNOWN.pos_tag)]
         for sentence in sentences:
             for curr_word in sentence:
-                # Create a feature vector for each word in the test set..
+                # Create a feature vector for each word in the test set.
                 vector = FeatureVector(curr_word.mwe_tag)
-                # Create and add a feature for the current word.
+                # Create features for the current word and POS.
                 curr_word_feature = self._current_word_feature(curr_word.lowercase_lemma)
+                curr_pos_feature = self._current_pos_feature(curr_word.pos_tag)
                 curr_word_feature_label = self.feature_set.get(curr_word_feature, default=default_curr_word_label)
-                vector.add(curr_word_feature_label)
+                curr_pos_feature_label = self.feature_set.get(curr_pos_feature, default=default_curr_pos_label)
                 # Create features for the previous word, next word, previous POS, and next POS.
                 prev_word = sentence[curr_word.offset - 1]
                 next_word = sentence[curr_word.offset + 1]
@@ -223,6 +232,8 @@ class Classifier:
                 prev_pos_feature_label = self.feature_set.get(prev_pos_feature, default=default_prev_pos_label)
                 next_pos_feature_label = self.feature_set.get(next_pos_feature, default=default_next_pos_label)
                 # Add those features to the vector.
+                vector.add(curr_word_feature_label)
+                vector.add(curr_pos_feature_label)
                 vector.add(prev_word_feature_label)
                 vector.add(next_word_feature_label)
                 vector.add(prev_pos_feature_label)
