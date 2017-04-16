@@ -12,9 +12,6 @@ FeatureID = int
 LabelDict = Dict[Label, int]
 
 
-BASE_LABEL = Label(0)
-
-
 class ZeroedLabelDict(LabelDict):
     def __new__(cls):
         return {label: 0 for label in Label}
@@ -135,8 +132,9 @@ class Evaluation:
 
 
 class MWE:
-    def __init__(self, threshold_multiplier=1.0):
+    def __init__(self, threshold_multiplier=1.0, base_label_tag=0):
         self.dtm = threshold_multiplier
+        self.base_label = Label(base_label_tag)
         self.frequencies: Dict[FeatureID, FrequencyCounter] = {}
         self.predictions: List[Prediction] = []
         self.total_frequencies = FrequencyCounter()
@@ -169,7 +167,7 @@ class MWE:
         # differences to find which is *most* likely.
         likely_labels: List[Tuple[Label, float]] = []  # A list of tuples mapping labels to their threshold difference.
         for label in Label:
-            if label == BASE_LABEL:
+            if label == self.base_label:
                 # Skip the "base" label.
                 continue
             difference = (self.total_frequencies.probability_of_label(label) * self.dtm) - probabilities[label]
@@ -182,7 +180,7 @@ class MWE:
             likely_label = max(likely_labels, key=lambda p: p[1])[0]
         else:
             # No labels were considered likely, so just use the base label.
-            likely_label = BASE_LABEL
+            likely_label = self.base_label
         return Prediction(likely_label, actual_label, features)
 
     def _compute_probabilities(self, features: List[FeatureID]) -> LabelDict:
@@ -222,9 +220,10 @@ if __name__ == '__main__':
     parser.add_argument('training_datafile')
     parser.add_argument('testing_datafile')
     parser.add_argument('--multiplier', '-m', type=float, default=1.0)
+    parser.add_argument('--base_label_tag', '-b', type=int, default=0)
     args = parser.parse_args()
 
-    mwe = MWE(args.multiplier)
+    mwe = MWE(args.multiplier, args.base_label_tag)
 
     # Train the MWE recognizer.
     mwe.train(args.training_datafile)
