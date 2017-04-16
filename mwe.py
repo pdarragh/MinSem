@@ -161,18 +161,7 @@ class MWE:
                 self.predictions.append(prediction)
 
     def _predict(self, actual_label: Label, features: List[FeatureID]) -> Prediction:
-        feature_count = len(features)
-        probabilities = ZeroedLabelDict()
-        for feature in features:
-            counter = self.frequencies.get(feature)
-            if counter is None:
-                # This feature is unique to the test data -- it is not found in the training data at all.
-                # So just use the total values as inspiration.
-                counter = self.total_frequencies
-            # Find the probabilities of each label for this feature.
-            for label in counter:
-                prob_of_label_for_feature = counter.probability_of_label(label)
-                probabilities[label] += prob_of_label_for_feature / feature_count
+        probabilities = self._compute_probabilities(features)
         # Now that we have the accumulated the probabilities of each label for this word, identify which is most likely.
         # We compare non-BASE_LABEL labels against their distributions within the entire training set. If the
         # probability is at or above the given threshold multiplier (default: 1.0), consider it a "likely" occurrence.
@@ -195,6 +184,21 @@ class MWE:
             # No labels were considered likely, so just use the base label.
             likely_label = BASE_LABEL
         return Prediction(likely_label, actual_label, features)
+
+    def _compute_probabilities(self, features: List[FeatureID]) -> LabelDict:
+        feature_count = len(features)
+        probabilities = ZeroedLabelDict()
+        for feature in features:
+            counter = self.frequencies.get(feature)
+            if counter is None:
+                # This feature is unique to the test data -- it is not found in the training data at all.
+                # So just use the total values as inspiration.
+                counter = self.total_frequencies
+            # Find the probabilities of each label for this feature.
+            for label in counter:
+                prob_of_label_for_feature = counter.probability_of_label(label)
+                probabilities[label] += prob_of_label_for_feature / feature_count
+        return probabilities
 
     def evaluate(self) -> Evaluation:
         evaluation = Evaluation()
