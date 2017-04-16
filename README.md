@@ -127,16 +127,15 @@ Running prediction over the example segment from the previous sections yields th
 
 ```
 Label  Recall      Precision 
- O      1.0         0.77777778
- B      0.0         0         
- I      0.0         0         
+ O      0.0         0.0       
+ B      0.0         0.0       
+ I      0.0         0.0       
 
    O  B  I
-O  7  0  0
-B  1  0  0
+O  0  3  4
+B  0  0  1
 I  1  0  0
 ```
 
-In this example, all words were labeled as being "Outside" a multi-word expression. More work is being done to improve
-the predictive capabilities of the system, but it does not merely label all words as being "Outside" (though that is
-certainly the most common prediction).
+In this short example, none of the words were correctly labeled. In fact, only one word was labeled as being "Outside"
+of a multi-word expression, when in truth only two words are considered part of an MWE.
