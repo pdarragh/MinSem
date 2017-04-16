@@ -21,6 +21,12 @@ class FrequencyCounter(Mapping):
     def __init__(self):
         self._frequencies: Dict[Label, int] = ZeroedLabelDict()
 
+    def __str__(self):
+        return f'{{{", ".join(f"{label.name}: {count}" for label, count in self._frequencies.items())}}}'
+
+    def __repr__(self):
+        return str(self)
+
     def __iter__(self):
         return iter(self._frequencies)
 
