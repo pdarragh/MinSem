@@ -178,47 +178,58 @@ class Classifier:
     def train(self, sentences: Iterable[DataSentence]):
         for sentence in sentences:
             for curr_word in sentence:
+                # Create a feature vector for each word in the training set.
                 vector = FeatureVector(curr_word.mwe_tag)
+                # Create and add a feature for the current word.
                 curr_word_feature = self._current_word_feature(curr_word.lowercase_lemma)
                 vector.add(self.feature_set[curr_word_feature])
+                # Create features for the previous word, next word, previous POS, and next POS.
                 prev_word = sentence[curr_word.offset - 1]
                 next_word = sentence[curr_word.offset + 1]
                 prev_word_feature = self._previous_word_feature(prev_word.lowercase_lemma)
                 next_word_feature = self._next_word_feature(next_word.lowercase_lemma)
                 prev_pos_feature = self._previous_pos_feature(prev_word.pos_tag)
                 next_pos_feature = self._next_pos_feature(next_word.pos_tag)
+                # Add those features to the vector.
                 vector.add(self.feature_set[prev_word_feature])
                 vector.add(self.feature_set[next_word_feature])
                 vector.add(self.feature_set[prev_pos_feature])
                 vector.add(self.feature_set[next_pos_feature])
+                # Add the vector to the list of training vectors.
                 self.training_vectors.append(vector)
 
     def test(self, sentences: Iterable[DataSentence]):
-        def_curr_word_label = self.feature_set[self._current_word_feature(UNKNOWN.lowercase_lemma)]
+        # Set up the default labels.
+        default_curr_word_label = self.feature_set[self._current_word_feature(UNKNOWN.lowercase_lemma)]
+        default_prev_word_label = self.feature_set[self._previous_word_feature(UNKNOWN.lowercase_lemma)]
+        default_next_word_label = self.feature_set[self._next_word_feature(UNKNOWN.lowercase_lemma)]
+        default_prev_pos_label = self.feature_set[self._previous_pos_feature(UNKNOWN.pos_tag)]
+        default_next_pos_label = self.feature_set[self._next_pos_feature(UNKNOWN.pos_tag)]
         for sentence in sentences:
             for curr_word in sentence:
+                # Create a feature vector for each word in the test set..
                 vector = FeatureVector(curr_word.mwe_tag)
+                # Create and add a feature for the current word.
                 curr_word_feature = self._current_word_feature(curr_word.lowercase_lemma)
-                curr_word_feature_label = self.feature_set.get(curr_word_feature, default=def_curr_word_label)
+                curr_word_feature_label = self.feature_set.get(curr_word_feature, default=default_curr_word_label)
                 vector.add(curr_word_feature_label)
+                # Create features for the previous word, next word, previous POS, and next POS.
                 prev_word = sentence[curr_word.offset - 1]
                 next_word = sentence[curr_word.offset + 1]
-                def_prev_word_label = self.feature_set[self._previous_word_feature(UNKNOWN.lowercase_lemma)]
-                def_next_word_label = self.feature_set[self._next_word_feature(UNKNOWN.lowercase_lemma)]
-                def_prev_pos_label = self.feature_set[self._previous_pos_feature(UNKNOWN.pos_tag)]
-                def_next_pos_label = self.feature_set[self._next_pos_feature(UNKNOWN.pos_tag)]
                 prev_word_feature = self._previous_word_feature(prev_word.lowercase_lemma)
                 next_word_feature = self._next_word_feature(next_word.lowercase_lemma)
                 prev_pos_feature = self._previous_pos_feature(prev_word.pos_tag)
                 next_pos_feature = self._next_pos_feature(next_word.pos_tag)
-                prev_word_feature_label = self.feature_set.get(prev_word_feature, default=def_prev_word_label)
-                next_word_feature_label = self.feature_set.get(next_word_feature, default=def_next_word_label)
-                prev_pos_feature_label = self.feature_set.get(prev_pos_feature, default=def_prev_pos_label)
-                next_pos_feature_label = self.feature_set.get(next_pos_feature, default=def_next_pos_label)
+                prev_word_feature_label = self.feature_set.get(prev_word_feature, default=default_prev_word_label)
+                next_word_feature_label = self.feature_set.get(next_word_feature, default=default_next_word_label)
+                prev_pos_feature_label = self.feature_set.get(prev_pos_feature, default=default_prev_pos_label)
+                next_pos_feature_label = self.feature_set.get(next_pos_feature, default=default_next_pos_label)
+                # Add those features to the vector.
                 vector.add(prev_word_feature_label)
                 vector.add(next_word_feature_label)
                 vector.add(prev_pos_feature_label)
                 vector.add(next_pos_feature_label)
+                # Add the vector to the list of testing vectors.
                 self.testing_vectors.append(vector)
 
     @staticmethod
