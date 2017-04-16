@@ -144,20 +144,23 @@ class MWE:
         with open(testing_datafile) as df:
             for line in df:
                 actual_label, features = self._read_line(line)
-                feature_count = len(features)
-                probabilities = ZeroedLabelDict()
-                for feature in features:
-                    counter = self.frequencies.get(feature)
-                    if counter is None:
-                        # This feature is unique to the test data -- it is not found in the training data at all.
-                        # So just use the total values as inspiration.
-                        counter = self.total_frequencies
-                    for label in counter:
-                        prob_of_label_for_feature = counter[label] / counter.total_occurrences
-                        probabilities[label] += prob_of_label_for_feature / feature_count
-                likely_label: Label = max(probabilities, key=probabilities.get)
-                prediction = Prediction(likely_label, actual_label, features)
+                prediction = self._predict(actual_label, features)
                 self.predictions.append(prediction)
+
+    def _predict(self, actual_label: Label, features: List[FeatureID]) -> Prediction:
+        feature_count = len(features)
+        probabilities = ZeroedLabelDict()
+        for feature in features:
+            counter = self.frequencies.get(feature)
+            if counter is None:
+                # This feature is unique to the test data -- it is not found in the training data at all.
+                # So just use the total values as inspiration.
+                counter = self.total_frequencies
+            for label in counter:
+                prob_of_label_for_feature = counter[label] / counter.total_occurrences
+                probabilities[label] += prob_of_label_for_feature / feature_count
+        likely_label: Label = max(probabilities, key=probabilities.get)
+        return Prediction(likely_label, actual_label, features)
 
     def evaluate(self) -> Evaluation:
         evaluation = Evaluation()
