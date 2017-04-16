@@ -43,6 +43,9 @@ class FrequencyCounter(Mapping):
     def total_occurrences(self) -> int:
         return sum(self._frequencies.values())
 
+    def probability_of_label(self, label: Label) -> float:
+        return self._frequencies[label] / self.total_occurrences
+
 
 class Prediction:
     def __init__(self, predicted_label: Label, actual_label: Label, features: List[FeatureID]):
