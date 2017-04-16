@@ -12,6 +12,9 @@ FeatureID = int
 LabelDict = Dict[Label, int]
 
 
+BASE_LABEL = Label(0)
+
+
 class ZeroedLabelDict(LabelDict):
     def __new__(cls):
         return {label: 0 for label in Label}
@@ -132,7 +135,8 @@ class Evaluation:
 
 
 class MWE:
-    def __init__(self):
+    def __init__(self, threshold_multiplier=1.0):
+        self.dtm = threshold_multiplier
         self.frequencies: Dict[FeatureID, FrequencyCounter] = {}
         self.predictions: List[Prediction] = []
         self.total_frequencies = FrequencyCounter()
@@ -165,10 +169,31 @@ class MWE:
                 # This feature is unique to the test data -- it is not found in the training data at all.
                 # So just use the total values as inspiration.
                 counter = self.total_frequencies
+            # Find the probabilities of each label for this feature.
             for label in counter:
-                prob_of_label_for_feature = counter[label] / counter.total_occurrences
+                prob_of_label_for_feature = counter.probability_of_label(label)
                 probabilities[label] += prob_of_label_for_feature / feature_count
-        likely_label: Label = max(probabilities, key=probabilities.get)
+        # Now that we have the accumulated the probabilities of each label for this word, identify which is most likely.
+        # We compare non-BASE_LABEL labels against their distributions within the entire training set. If the
+        # probability is at or above the given threshold multiplier (default: 1.0), consider it a "likely" occurrence.
+        # Due to the possibility of multiple labels being above the necessary minimum, compare their respective
+        # differences to find which is *most* likely.
+        likely_labels: List[Tuple[Label, float]] = []  # A list of tuples mapping labels to their threshold difference.
+        for label in Label:
+            if label == BASE_LABEL:
+                # Skip the "base" label.
+                continue
+            difference = (self.total_frequencies.probability_of_label(label) * self.dtm) - probabilities[label]
+            if difference >= 0:
+                pair = (label, difference)
+                likely_labels.append(pair)
+        # Check if there were any labels above their thresholds.
+        if likely_labels:
+            # There was at least one likely label, so pick the label with the greatest difference from the baseline.
+            likely_label = max(likely_labels, key=lambda p: p[1])[0]
+        else:
+            # No labels were considered likely, so just use the base label.
+            likely_label = BASE_LABEL
         return Prediction(likely_label, actual_label, features)
 
     def evaluate(self) -> Evaluation:
