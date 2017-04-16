@@ -39,6 +39,7 @@ class DataToken:
     def __str__(self):
         return repr(self)
 
+
 def make_phi(sentence_id='') -> DataToken:
     return DataToken(0, 'PHI', 'PHI', 'PHIPOS', 'O', '', sentence_id)
 
@@ -278,7 +279,7 @@ def get_distinct_words_and_poses_from_sentences(sentences: Iterable[DataSentence
             poses[token.pos_tag] = 1
     words_list = list(words.keys())
     poses_list = list(poses.keys())
-    return (words_list, poses_list)
+    return words_list, poses_list
 
 
 if __name__ == '__main__':
