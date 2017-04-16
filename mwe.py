@@ -44,6 +44,8 @@ class FrequencyCounter(Mapping):
         return sum(self._frequencies.values())
 
     def probability_of_label(self, label: Label) -> float:
+        if self.total_occurrences == 0:
+            return 0
         return self._frequencies[label] / self.total_occurrences
 
 
