@@ -217,9 +217,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('training_datafile')
     parser.add_argument('testing_datafile')
+    parser.add_argument('--multiplier', '-m', type=float, default=1.0)
     args = parser.parse_args()
 
-    mwe = MWE()
+    mwe = MWE(args.multiplier)
 
     # Train the MWE recognizer.
     mwe.train(args.training_datafile)
