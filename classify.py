@@ -3,13 +3,22 @@
 from collections import OrderedDict
 from enum import Enum
 from itertools import chain
-from typing import Iterable, List, Mapping, Sequence, Tuple
+from typing import Iterable, List, Mapping, Sequence, Set, Tuple
 
 
 class Label(Enum):
     O = 0
     B = 1
     I = 2
+
+
+class Feature(Enum):
+    CurrentWord = 0
+    CurrentPOS = 1
+    PreviousWord = 2
+    PreviousPOS = 3
+    NextWord = 4
+    NextPOS = 5
 
 
 def label_from_string(s: str) -> Label:
@@ -131,7 +140,8 @@ class FeatureVector:
 
 
 class Classifier:
-    def __init__(self, feature_words: Iterable[str], feature_poses: Iterable[str]):
+    def __init__(self, feature_words: Iterable[str], feature_poses: Iterable[str], suppress_feature_tags: Set[int]):
+        self.suppressed_features = {Feature(x) for x in suppress_feature_tags}
         self.feature_set = FeatureSet()
         self._generate_features(feature_words, feature_poses)
         self.training_vectors = list()
@@ -169,75 +179,89 @@ class Classifier:
             self._generate_features_for_pos(pos)
 
     def _generate_features_for_word(self, word: str):
-        self.feature_set.add(self._current_word_feature(word))
-        self.feature_set.add(self._previous_word_feature(word))
-        self.feature_set.add(self._next_word_feature(word))
+        if Feature.CurrentWord not in self.suppressed_features:
+            self.feature_set.add(self._current_word_feature(word))
+        if Feature.PreviousWord not in self.suppressed_features:
+            self.feature_set.add(self._previous_word_feature(word))
+        if Feature.NextWord not in self.suppressed_features:
+            self.feature_set.add(self._next_word_feature(word))
 
     def _generate_features_for_pos(self, pos: str):
-        self.feature_set.add(self._current_pos_feature(pos))
-        self.feature_set.add(self._previous_pos_feature(pos))
-        self.feature_set.add(self._next_pos_feature(pos))
+        if Feature.CurrentPOS not in self.suppressed_features:
+            self.feature_set.add(self._current_pos_feature(pos))
+        if Feature.PreviousPOS not in self.suppressed_features:
+            self.feature_set.add(self._previous_pos_feature(pos))
+        if Feature.NextPOS not in self.suppressed_features:
+            self.feature_set.add(self._next_pos_feature(pos))
 
     def train(self, sentences: Iterable[DataSentence]):
         for sentence in sentences:
             for curr_word in sentence:
                 # Create a feature vector for each word in the training set.
                 vector = FeatureVector(curr_word.mwe_tag)
-                # Create features for the current word and POS.
-                curr_word_feature = self._current_word_feature(curr_word.lowercase_lemma)
-                curr_pos_feature = self._current_pos_feature(curr_word.pos_tag)
-                # Create features for the previous word, next word, previous POS, and next POS.
                 prev_word = sentence[curr_word.offset - 1]
                 next_word = sentence[curr_word.offset + 1]
-                prev_word_feature = self._previous_word_feature(prev_word.lowercase_lemma)
-                next_word_feature = self._next_word_feature(next_word.lowercase_lemma)
-                prev_pos_feature = self._previous_pos_feature(prev_word.pos_tag)
-                next_pos_feature = self._next_pos_feature(next_word.pos_tag)
-                # Add those features to the vector.
-                vector.add(self.feature_set[curr_word_feature])
-                vector.add(self.feature_set[curr_pos_feature])
-                vector.add(self.feature_set[prev_word_feature])
-                vector.add(self.feature_set[next_word_feature])
-                vector.add(self.feature_set[prev_pos_feature])
-                vector.add(self.feature_set[next_pos_feature])
+                # If not suppressed, create features for the current, previous, and next word and POS and add them.
+                if Feature.CurrentWord not in self.suppressed_features:
+                    curr_word_feature = self._current_word_feature(curr_word.lowercase_lemma)
+                    vector.add(self.feature_set[curr_word_feature])
+                if Feature.CurrentPOS not in self.suppressed_features:
+                    curr_pos_feature = self._current_pos_feature(curr_word.pos_tag)
+                    vector.add(self.feature_set[curr_pos_feature])
+                if Feature.PreviousWord not in self.suppressed_features:
+                    prev_word_feature = self._previous_word_feature(prev_word.lowercase_lemma)
+                    vector.add(self.feature_set[prev_word_feature])
+                if Feature.PreviousPOS not in self.suppressed_features:
+                    prev_pos_feature = self._previous_pos_feature(prev_word.pos_tag)
+                    vector.add(self.feature_set[prev_pos_feature])
+                if Feature.NextWord not in self.suppressed_features:
+                    next_word_feature = self._next_word_feature(next_word.lowercase_lemma)
+                    vector.add(self.feature_set[next_word_feature])
+                if Feature.NextPOS not in self.suppressed_features:
+                    next_pos_feature = self._next_pos_feature(next_word.pos_tag)
+                    vector.add(self.feature_set[next_pos_feature])
                 # Add the vector to the list of training vectors.
                 self.training_vectors.append(vector)
 
     def test(self, sentences: Iterable[DataSentence]):
-        # Set up the default labels.
-        default_curr_word_label = self.feature_set[self._current_word_feature(UNKNOWN.lowercase_lemma)]
-        default_prev_word_label = self.feature_set[self._previous_word_feature(UNKNOWN.lowercase_lemma)]
-        default_next_word_label = self.feature_set[self._next_word_feature(UNKNOWN.lowercase_lemma)]
-        default_curr_pos_label = self.feature_set[self._current_pos_feature(UNKNOWN.pos_tag)]
-        default_prev_pos_label = self.feature_set[self._previous_pos_feature(UNKNOWN.pos_tag)]
-        default_next_pos_label = self.feature_set[self._next_pos_feature(UNKNOWN.pos_tag)]
         for sentence in sentences:
             for curr_word in sentence:
                 # Create a feature vector for each word in the test set.
                 vector = FeatureVector(curr_word.mwe_tag)
-                # Create features for the current word and POS.
-                curr_word_feature = self._current_word_feature(curr_word.lowercase_lemma)
-                curr_pos_feature = self._current_pos_feature(curr_word.pos_tag)
-                curr_word_feature_label = self.feature_set.get(curr_word_feature, default=default_curr_word_label)
-                curr_pos_feature_label = self.feature_set.get(curr_pos_feature, default=default_curr_pos_label)
-                # Create features for the previous word, next word, previous POS, and next POS.
                 prev_word = sentence[curr_word.offset - 1]
                 next_word = sentence[curr_word.offset + 1]
-                prev_word_feature = self._previous_word_feature(prev_word.lowercase_lemma)
-                next_word_feature = self._next_word_feature(next_word.lowercase_lemma)
-                prev_pos_feature = self._previous_pos_feature(prev_word.pos_tag)
-                next_pos_feature = self._next_pos_feature(next_word.pos_tag)
-                prev_word_feature_label = self.feature_set.get(prev_word_feature, default=default_prev_word_label)
-                next_word_feature_label = self.feature_set.get(next_word_feature, default=default_next_word_label)
-                prev_pos_feature_label = self.feature_set.get(prev_pos_feature, default=default_prev_pos_label)
-                next_pos_feature_label = self.feature_set.get(next_pos_feature, default=default_next_pos_label)
-                # Add those features to the vector.
-                vector.add(curr_word_feature_label)
-                vector.add(curr_pos_feature_label)
-                vector.add(prev_word_feature_label)
-                vector.add(next_word_feature_label)
-                vector.add(prev_pos_feature_label)
-                vector.add(next_pos_feature_label)
+                # For each feature, check that it is not being suppressed and then get the appropriate feature label.
+                # Features which were not identified in the training data will use the UNKNOWN features.
+                if Feature.CurrentWord not in self.suppressed_features:
+                    default_curr_word_label = self.feature_set[self._current_word_feature(UNKNOWN.lowercase_lemma)]
+                    curr_word_feature = self._current_word_feature(curr_word.lowercase_lemma)
+                    curr_word_feature_label = self.feature_set.get(curr_word_feature, default=default_curr_word_label)
+                    vector.add(curr_word_feature_label)
+                if Feature.CurrentPOS not in self.suppressed_features:
+                    default_curr_pos_label = self.feature_set[self._current_pos_feature(UNKNOWN.pos_tag)]
+                    curr_pos_feature = self._current_pos_feature(curr_word.pos_tag)
+                    curr_pos_feature_label = self.feature_set.get(curr_pos_feature, default=default_curr_pos_label)
+                    vector.add(curr_pos_feature_label)
+                if Feature.PreviousWord not in self.suppressed_features:
+                    default_prev_word_label = self.feature_set[self._previous_word_feature(UNKNOWN.lowercase_lemma)]
+                    prev_word_feature = self._previous_word_feature(prev_word.lowercase_lemma)
+                    prev_word_feature_label = self.feature_set.get(prev_word_feature, default=default_prev_word_label)
+                    vector.add(prev_word_feature_label)
+                if Feature.PreviousPOS not in self.suppressed_features:
+                    default_prev_pos_label = self.feature_set[self._previous_pos_feature(UNKNOWN.pos_tag)]
+                    prev_pos_feature = self._previous_pos_feature(prev_word.pos_tag)
+                    prev_pos_feature_label = self.feature_set.get(prev_pos_feature, default=default_prev_pos_label)
+                    vector.add(prev_pos_feature_label)
+                if Feature.NextWord not in self.suppressed_features:
+                    default_next_word_label = self.feature_set[self._next_word_feature(UNKNOWN.lowercase_lemma)]
+                    next_word_feature = self._next_word_feature(next_word.lowercase_lemma)
+                    next_word_feature_label = self.feature_set.get(next_word_feature, default=default_next_word_label)
+                    vector.add(next_word_feature_label)
+                if Feature.NextPOS not in self.suppressed_features:
+                    default_next_pos_label = self.feature_set[self._next_pos_feature(UNKNOWN.pos_tag)]
+                    next_pos_feature = self._next_pos_feature(next_word.pos_tag)
+                    next_pos_feature_label = self.feature_set.get(next_pos_feature, default=default_next_pos_label)
+                    vector.add(next_pos_feature_label)
                 # Add the vector to the list of testing vectors.
                 self.testing_vectors.append(vector)
 
@@ -298,6 +322,8 @@ if __name__ == '__main__':
     parser.add_argument('training_output', help='the output file for training data classification')
     parser.add_argument('testing_output', help='the output file for testing data classification')
     parser.add_argument('--feature_output', help='the output file for the entire feature set')
+    parser.add_argument('--suppress_feature', '-s', help='prevent a feature from being used',
+                        action='append', type=int, default=list())
     args = parser.parse_args()
 
     # Read the data.
@@ -306,7 +332,7 @@ if __name__ == '__main__':
 
     distinct_words, distinct_poses = get_distinct_words_and_poses_from_sentences(training_sentences)
 
-    classifier = Classifier(distinct_words, distinct_poses)
+    classifier = Classifier(distinct_words, distinct_poses, set(args.suppress_feature))
 
     classifier.train(training_sentences)
     classifier.test(testing_sentences)
