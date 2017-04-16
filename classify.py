@@ -134,9 +134,6 @@ class Classifier:
     def __init__(self, feature_words: Iterable[str], feature_poses: Iterable[str]):
         self.feature_set = FeatureSet()
         self._generate_features(feature_words, feature_poses)
-        self.reset_vectors()
-
-    def reset_vectors(self):
         self.training_vectors = list()
         self.testing_vectors = list()
 
