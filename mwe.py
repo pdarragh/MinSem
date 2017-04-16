@@ -57,6 +57,7 @@ class Evaluation:
         self.correct = ZeroedLabelDict()
         self.predicted = ZeroedLabelDict()
         self.actual = ZeroedLabelDict()
+        self.confusion_matrix = {label: ZeroedLabelDict() for label in Label}
 
     def __str__(self):
         default_len = 10
@@ -81,7 +82,39 @@ class Evaluation:
                 '  '
                 f'{precision:<{default_len}}'
             )
+        recall_precision = '\n'.join(lines)
+        matrix_string = self._confusion_matrix_to_string()
+        return recall_precision + '\n\n' + matrix_string
+
+    def _confusion_matrix_to_string(self) -> str:
+        length = 0
+        label_length = 0
+        for label in Label:
+            label_length = max(label_length, len(label.name))
+            length = max(length, len(label.name))
+            count_dict = self.confusion_matrix[label]
+            for count in count_dict.values():
+                length = max(length, len(str(count)))
+        labels = (f'{label.name:^{length}}' for label in Label)
+        leader = (' ' * label_length) + '  ' + '  '.join(labels)
+        lines = [leader]
+        for label in Label:
+            line_parts = [f'{label.name:^{label_length}}']
+            count_dict = self.confusion_matrix[label]
+            for inner_label in Label:
+                count = count_dict[inner_label]
+                line_parts.append(f'{count:>{length}}')
+            lines.append('  '.join(line_parts))
         return '\n'.join(lines)
+
+    def process_prediction(self, prediction: Prediction):
+        actual = prediction.actual_label
+        predicted = prediction.predicted_label
+        self.confusion_matrix[actual][predicted] += 1
+        self.predicted[predicted] += 1
+        self.actual[actual] += 1
+        if predicted == actual:
+            self.correct[predicted] += 1
 
     def recall(self, label: Label):
         try:
@@ -94,32 +127,6 @@ class Evaluation:
             return self.correct[label] / self.predicted[label]
         except ZeroDivisionError:
             return 0
-
-
-class ConfusionMatrix(Mapping):
-    def __init__(self):
-        # The matrix maps ACTUAL labels to dicts mapping PREDICTED labels to their counts.
-        # (i.e. `l1` is the ACTUAL label and `l2` is the PREDICTED label.)
-        self.matrix = {l1: {l2: 0 for l2 in Label} for l1 in Label}
-
-    def __iter__(self):
-        return iter(self.matrix)
-
-    def __len__(self):
-        return len(self.matrix)
-
-    def __getitem__(self, item: Union[Label, Tuple[Label, Label]]):
-        if isinstance(item, Label):
-            return self.matrix[item]
-        elif isinstance(item, Tuple[Label, Label]):
-            actual, predicted = item
-            return self.matrix[actual][predicted]
-        else:
-            raise KeyError(str(item))
-
-    def __setitem__(self, key: Tuple[Label, Label], value: int):
-        actual, predicted = key
-        self.matrix[actual][predicted] = value
 
 
 class MWE:
@@ -162,10 +169,7 @@ class MWE:
     def evaluate(self) -> Evaluation:
         evaluation = Evaluation()
         for prediction in self.predictions:
-            evaluation.predicted[prediction.predicted_label] += 1
-            evaluation.actual[prediction.actual_label] += 1
-            if prediction.predicted_label == prediction.actual_label:
-                evaluation.correct[prediction.predicted_label] += 1
+            evaluation.process_prediction(prediction)
         return evaluation
 
     @staticmethod
