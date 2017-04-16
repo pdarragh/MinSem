@@ -4,18 +4,11 @@
 A machine learning classifier for identifying minimal semantic units. See the README.md for more information.
 """
 
-from enum import Enum
-from typing import Dict, List, Mapping, Tuple, Union
+from .classify import Label
+
+from typing import Dict, List, Mapping, Tuple
 
 FeatureID = int
-
-
-class Label(Enum):
-    O = 0
-    B = 1
-    I = 2
-
-
 LabelDict = Dict[Label, int]
 
 
