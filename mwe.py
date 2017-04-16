@@ -4,7 +4,7 @@
 A machine learning classifier for identifying minimal semantic units. See the README.md for more information.
 """
 
-from .classify import Label
+from classify import Label
 
 from typing import Dict, List, Mapping, Tuple
 
