@@ -14,6 +14,7 @@ parser.add_argument('training_data', help='the datafile to train with')
 parser.add_argument('testing_data', help='the datafile to test with')
 parser.add_argument('training_output', help='the output file for training data classification')
 parser.add_argument('testing_output', help='the output file for testing data classification')
+parser.add_argument('--multiplier', '-m', type=float, default=1.0)
 args = parser.parse_args()
 
 for count in range(args.feature_count + 1):
@@ -30,7 +31,8 @@ for count in range(args.feature_count + 1):
         subprocess.run(classify)
         mwe = [
             executable,
-            args.mwe, args.training_output, args.testing_output
+            args.mwe, args.training_output, args.testing_output,
+            '-m', args.multiplier
         ]
         process = subprocess.run(mwe, stdout=subprocess.PIPE)
         print(process.stdout.decode('utf-8'))
