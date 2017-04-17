@@ -172,7 +172,7 @@ class MWE:
             if label == self.base_label:
                 # Skip the "base" label.
                 continue
-            difference = (self.total_frequencies.probability_of_label(label) * self.dtm) - probabilities[label]
+            difference = probabilities[label] - (self.total_frequencies.probability_of_label(label) * self.dtm)
             if difference >= 0:
                 pair = (label, difference)
                 likely_labels.append(pair)
