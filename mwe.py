@@ -209,10 +209,10 @@ class MWE:
     @staticmethod
     def _read_line(line: str) -> Tuple[Label, List[FeatureID]]:
         # Lines are assumed to be written in the form:
-        #   <label> <feature_1> <feature_2> ...
-        parts = [int(part) for part in line.strip().split()]
-        label = Label(parts[0])
-        features = parts[1:]
+        #   <label> <feature_1>:1 <feature_2>:1 ...
+        parts = line.strip().split()
+        label = Label(int(parts[0]))
+        features = [int(part.split(':')[0]) for part in parts[1:]]
         return label, features
 
 
