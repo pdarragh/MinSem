@@ -88,7 +88,12 @@ class Evaluation:
             )
         recall_precision = '\n'.join(lines)
         matrix_string = self._confusion_matrix_to_string()
-        return recall_precision + '\n\n' + matrix_string
+        accuracy_string = f'Accuracy: {self.accuracy}'
+        return '\n\n'.join((
+            recall_precision,
+            matrix_string,
+            accuracy_string,
+        ))
 
     def _confusion_matrix_to_string(self) -> str:
         length = 0
@@ -131,6 +136,10 @@ class Evaluation:
             return self.correct[label] / self.predicted[label]
         except ZeroDivisionError:
             return 0
+
+    @property
+    def accuracy(self):
+        return sum(self.correct.values()) / sum(self.actual.values())
 
 
 class MWE:
