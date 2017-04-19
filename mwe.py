@@ -134,14 +134,17 @@ class Evaluation:
 
 
 class MWE:
-    def __init__(self, threshold_multiplier=1.0, base_label_tag=0):
+    def __init__(self, training_datafile:str, testing_datafile:str, threshold_multiplier=1.0, base_label_tag=0):
         self.dtm = threshold_multiplier
         self.base_label = Label(base_label_tag)
         self.frequencies: Dict[FeatureID, FrequencyCounter] = {}
         self.predictions: List[Prediction] = []
         self.total_frequencies = FrequencyCounter()
+        self._train(training_datafile)
+        self._test(testing_datafile)
+        self.evaluation = self._evaluate()
 
-    def train(self, training_datafile: str):
+    def _train(self, training_datafile: str):
         with open(training_datafile) as df:
             for line in df:
                 label, features = self._read_line(line)
@@ -153,7 +156,7 @@ class MWE:
                     frequency[label] += 1
                     self.total_frequencies[label] += 1
 
-    def test(self, testing_datafile: str):
+    def _test(self, testing_datafile: str):
         with open(testing_datafile) as df:
             for line in df:
                 actual_label, features = self._read_line(line)
@@ -200,7 +203,7 @@ class MWE:
                 probabilities[label] += prob_of_label_for_feature / feature_count
         return probabilities
 
-    def evaluate(self) -> Evaluation:
+    def _evaluate(self) -> Evaluation:
         evaluation = Evaluation()
         for prediction in self.predictions:
             evaluation.process_prediction(prediction)
@@ -225,16 +228,9 @@ if __name__ == '__main__':
     parser.add_argument('--base_label_tag', '-b', type=int, default=0)
     args = parser.parse_args()
 
-    mwe = MWE(args.multiplier, args.base_label_tag)
-
-    # Train the MWE recognizer.
-    mwe.train(args.training_datafile)
-
-    # Now test it!
-    mwe.test(args.testing_datafile)
-
-    # And evaluation here.
-    result = mwe.evaluate()
+    mwe = MWE(args.training_datafile, args.testing_datafile,
+              threshold_multiplier=args.multiplier,
+              base_label_tag=args.base_label_tag)
 
     # Print results.
-    print(result)
+    print(mwe.evaluation)
