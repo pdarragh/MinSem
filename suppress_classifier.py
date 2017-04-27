@@ -32,7 +32,7 @@ for count in range(args.feature_count + 1):
         mwe = [
             executable,
             args.mwe, args.training_output, args.testing_output,
-            '-m', args.multiplier
+            '-m', str(args.multiplier)
         ]
         process = subprocess.run(mwe, stdout=subprocess.PIPE)
         print(process.stdout.decode('utf-8'))
